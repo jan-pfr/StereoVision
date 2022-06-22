@@ -2,6 +2,7 @@ import cv2 as cv
 import imutils
 def detectObject(frame, maskedFrame):
     # find contours
+    global centerFound
     contours = cv.findContours(maskedFrame.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     contours = imutils.grab_contours(contours)
     center = None
@@ -17,7 +18,10 @@ def detectObject(frame, maskedFrame):
         if radius > 20:
             # draw the circle and centroid on the frame,
             # then update the list of tracked points
+            centerFound = True
             cv.circle(frame, (int(x), int(y)), int(radius),
                       (0, 255, 255), 2)
             cv.circle(frame, center, 2, (0, 0, 255), -1)
-    return center, frame
+        else:
+            centerFound = False
+    return centerFound, center, frame

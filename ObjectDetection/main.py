@@ -41,13 +41,18 @@ while (cap_right.isOpened() and cap_left.isOpened()):
 
     # apply HSV Filter and return x,y for the left cam
     leftFrameMasked = filter.applyFilter(leftFrame, loverHSVRange, higherHSVRange)
-    center_left, leftFrameMasked = od.detectObject(leftFrame,leftFrameMasked)
+    leftFound, center_left, leftFrameMasked = od.detectObject(leftFrame,leftFrameMasked)
 
     # apply HSV Filter and return x,y for the left cam
     rightFrameMasked = filter.applyFilter(rightFrame, loverHSVRange, higherHSVRange)
-    center_right, rightFrameMasked = od.detectObject(rightFrame,rightFrameMasked)
+    rightFound, center_right, rightFrameMasked = od.detectObject(rightFrame,rightFrameMasked)
 
-    try:
+    if not leftFound and not rightFound:
+        cv.putText(rightFrameMasked, "No traceable object found", (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1.2,
+                   (0, 0, 255), 3)
+        cv.putText(leftFrameMasked, "No traceable object found", (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1.2,
+                   (0, 0, 255), 3)
+    else:
         depth = tri.find_depth(right_point=center_right,
                                left_point=center_left,
                                frame_right=rightFrameMasked,
@@ -55,11 +60,10 @@ while (cap_right.isOpened() and cap_left.isOpened()):
                                baseline=B,
                                f=f,
                                alpha=alpha)
-        cv.putText(rightFrameMasked, "Distance: " + str(round(depth, 1)), (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
+        cv.putText(rightFrameMasked, "Distance: " + str(round(depth, 1)), (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1.2,
+                   (0, 255, 0), 3)
         cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1.2,
                    (0, 255, 0), 3)
-    except:
-        None
     cv.imshow("right frame", rightFrame)
     cv.imshow("left frame", leftFrame)
     # Hit "q" to close the window
