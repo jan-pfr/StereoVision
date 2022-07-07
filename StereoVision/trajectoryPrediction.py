@@ -3,21 +3,21 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import RANSACRegressor
 
 
-class TrajectoryPredictor:
+class TrajectoryPrediction:
 
     """
     Class to predict a Path based on given points.
     """
 
-    def __init__(self):
+    def __init__(self, min_samples: int):
         """
-        Creates a TrajectoryPredictor object.
+        Creates a TrajectoryPrediction object.
 
         """
-        self.Xr = RANSACRegressor(min_samples=self.min_samples)
+        self.Xr = RANSACRegressor(min_samples=min_samples)
         self.Yr = PolynomialFeatures()
-        self.YrR = RANSACRegressor(min_samples=self.min_samples)
-        self.Zr = RANSACRegressor(min_samples=self.min_samples)
+        self.YrR = RANSACRegressor(min_samples=min_samples)
+        self.Zr = RANSACRegressor(min_samples=min_samples)
 
     def predict_path(self, path: np.array, next_points: int) -> np.array:
 

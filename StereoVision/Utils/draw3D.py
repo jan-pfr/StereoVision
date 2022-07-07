@@ -1,10 +1,10 @@
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
-from StereoVision.trajectory import TrajectoryPredictor
+from StereoVision.trajectoryPrediction import TrajectoryPrediction
 import seaborn as sns
 
-tp = TrajectoryPredictor()
+tp = TrajectoryPrediction()
 from math import trunc
 
 

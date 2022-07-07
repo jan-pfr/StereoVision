@@ -13,6 +13,8 @@ class ObjectDetection:
         """
         Creates a Object Detection object.
         """
+        self.center = None
+        self.center_found = False
         pass
 
     def detect_object(self, frame: np.array, masked_frame: np.array):
@@ -28,8 +30,6 @@ class ObjectDetection:
         # find contours
         contours = cv.findContours(masked_frame, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         contours = imutils.grab_contours(contours)
-
-        center = None
         # only proceed, if at least one contour have been found
         if len(contours) > 0:
 
@@ -37,15 +37,15 @@ class ObjectDetection:
             c = max(contours, key=cv.contourArea)
             ((x, y), radius) = cv.minEnclosingCircle(c)
             M = cv.moments(c)
-            center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+            self.center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
             # only proceed if the radius meets a minimum size
             if radius > 17:
                 # draw the circle and center on the frame,
-                center_found = True
+                self.center_found = True
                 cv.circle(frame, (int(x), int(y)), int(radius),
                           (0, 255, 255), 2)
-                cv.circle(frame, center, 2, (0, 0, 255), -1)
+                cv.circle(frame, self.center, 2, (0, 0, 255), -1)
         else:
-            center_found = False
-        return center_found, center, frame
+            self.center_found = False
+        return self.center_found, self.center, frame

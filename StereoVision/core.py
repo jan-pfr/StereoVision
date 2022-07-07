@@ -2,18 +2,16 @@ import cv2 as cv
 import numpy as np
 import time
 import triangulation as tri
-import filter as filter
-import objectDetection as od
+from filter import Filter
+from objectDetection import ObjectDetection
 from counter import CountsPerSec
 from cameraCapture import CameraCapture
-from trajectory import TrajectoryPredictor
+from trajectoryPrediction import TrajectoryPrediction
 
 # Open both cameras in extra Threads
 capLeft = CameraCapture(0).start()
 capRight = CameraCapture(1).start()
 
-# Create Object from the TrajectoryPredictor
-tp = TrajectoryPredictor()
 
 # toDo: Parameter that have to be moved out of the Code into a config-File
 
@@ -36,7 +34,11 @@ positions = np.array([])
 # counter for keeping track of the amount of coordinates so far.
 count = 0
 
-
+# Create Objects from the TrajectoryPredictor and others
+# toDo: better Object Names
+tp = TrajectoryPrediction(min_samples)
+fltr = Filter(lowerHSVRange, higherHSVRange)
+od = ObjectDetection()
 # allow Camera warm up
 time.sleep(2.0)
 
@@ -52,9 +54,9 @@ def putIterationsPerSec(frame, iterations_per_sec):
 # First the filter and than the objectDetection is applied.
 # If no Object is found, the boolean found is False and the center is None. The frame is returned in any case.
 def processFrame(frame):
-    # toDo: Apply Changes from the Module eg. Objects
-    frameMasked = filter.applyFilter(frame, lowerHSVRange, higherHSVRange)
-    found, center, frameMasked = od.detectObject(frame, frameMasked)
+
+    frameMasked = fltr.apply_filter(frame)
+    found, center, frameMasked = od.detect_object(frame, frameMasked)
     return found, center, frameMasked
 
 

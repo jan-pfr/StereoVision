@@ -3,4 +3,6 @@
 ## Installation
 ```pip install -r requirements.txt```
 
-````python core.py````
+To Start the Application
+
+````python ./StereoVisison/core.py````
