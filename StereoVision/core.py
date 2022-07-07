@@ -1,11 +1,6 @@
-
 import cv2 as cv
-
 import numpy as np
 import time
-
-
-# Functions for stereo vision and depth estimation
 import triangulation as tri
 import filter as filter
 import objectDetection as od

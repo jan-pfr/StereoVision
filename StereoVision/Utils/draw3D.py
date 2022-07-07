@@ -1,15 +1,12 @@
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
-from ObjectDetection.trajectory import TrajectoryPredictor
+from StereoVision.trajectory import TrajectoryPredictor
 import seaborn as sns
 
 tp = TrajectoryPredictor()
 from math import trunc
-# np.polyfit() for x, y, z in time
-# function that starts a time when a ball is recognized
-# function to 3d Visualize the the curve
-# how to detect x y?
+
 
 def printSomething (points):
     sns.set_style("whitegrid", {'axes.grid': False})

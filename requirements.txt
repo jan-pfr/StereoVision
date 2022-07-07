@@ -1,0 +1,7 @@
+scikit-learn~=1.1.1
+numpy~=1.22.3
+opencv-python~=4.5.5.64
+scikit-video
+matplotlib~=3.5.1
+imutils~=0.5.4
+seaborn
