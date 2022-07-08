@@ -1,11 +1,9 @@
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from StereoVision.trajectoryPrediction import TrajectoryPrediction
 import seaborn as sns
 
-tp = TrajectoryPrediction()
-from math import trunc
+tp = TrajectoryPrediction(2)
 
 
 def printSomething (points):
@@ -17,7 +15,7 @@ def printSomething (points):
     ax.azim = 90
 
     ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=np.arange(points.shape[0]))
-    pointsPredicted = tp.predict_path(points)
+    pointsPredicted = tp.predict_path(points, 15)
     ax.plot(pointsPredicted[:, 0], pointsPredicted[:, 1], pointsPredicted[:, 2])
     ax1.plot(points[:, 0])
     ax1.plot(pointsPredicted[:, 0])
@@ -31,7 +29,7 @@ def printSomething (points):
     ax.set_zlabel('z')
     plt.show()
 
-file = open("params.txt", "r")
+file = open("../params.txt", "r")
 corrds = []
 for corrd in file:
     corrds.append(corrd.split(","))

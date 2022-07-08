@@ -1,7 +1,9 @@
+import logging
+
 import cv2 as cv
 import numpy as np
 import time
-import triangulation as tri
+from triangulation import Triangulation
 from filter import Filter
 from objectDetection import ObjectDetection
 from counter import CountsPerSec
@@ -12,11 +14,11 @@ from trajectoryPrediction import TrajectoryPrediction
 capLeft = CameraCapture(0).start()
 capRight = CameraCapture(1).start()
 
-
 # toDo: Parameter that have to be moved out of the Code into a config-File
 
 # Amount of minimum Samples, before a trajectroy is tried to be predicted
 min_samples = 2
+min_time_diff = float(0.04)
 
 # Stereo vision setup parameters
 frame_rate = 30  # Camera frame rate (maximum at 120 fps)
@@ -31,22 +33,30 @@ higherHSVRange = (43, 255, 255)
 # Array for coordinates of the object, if one is detected in the picture
 positions = []
 
+# Empty Arrays for old frames
+left_frame_old = np.array([])
+right_frame_old = np.array([])
+
 # counter for keeping track of the amount of coordinates so far.
 count = 0
+
+# Logger configuration
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 # Create Objects from the TrajectoryPredictor and others
 # toDo: better Object Names
 tp = TrajectoryPrediction(min_samples)
+tr = Triangulation()
 fltr = Filter(lowerHSVRange, higherHSVRange)
 od = ObjectDetection()
+
 # allow Camera warm up
 time.sleep(2.0)
 
+
 ### Functions that are used inside this application
 
-
 def put_iterations_per_sec(frame, iterations_per_sec):
-
     """
     Put the Iterations per Second Number on to a frame.
 
@@ -56,12 +66,11 @@ def put_iterations_per_sec(frame, iterations_per_sec):
     """
 
     cv.putText(frame, "{:.0f} iterations/sec".format(iterations_per_sec),
-        (10, 650), cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
+               (10, 650), cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
     return frame
 
 
 def process_frame(frame):
-
     """
     Apply filter and object detection on frame.
     If no Object is found, the boolean found is False and the center is None.
@@ -77,7 +86,6 @@ def process_frame(frame):
 
 
 def draw_points_to_frame(points: np.array, frame) -> np.array:
-
     """
     Get points and draws them onto the frame.
 
@@ -91,23 +99,38 @@ def draw_points_to_frame(points: np.array, frame) -> np.array:
             cv.circle(frame, (int(x), int(y)), 2, (255, 0, 0), 10)
     return frame
 
+
 # optional counter for iterations per second
 cps = CountsPerSec().start()
 
 # Main loop
 while True:
 
-    # collect frames from the camera threads.
+    # Collect frames from the camera threads.
+    leftTimestamp, leftFrame = capLeft.getFrame()
+    rightTimestamp, rightFrame = capRight.getFrame()
 
-    leftFrame = cv.flip(capLeft.frame, 0)
-    rightFrame = cv.flip(capRight.frame, 0)
+    # Flip the frames.
+    leftFrame = cv.flip(leftFrame, 0)
+    rightFrame = cv.flip(rightFrame, 0)
 
-    # toDo: Validate, that both pictures are new.
+    # Check if the images are too far apart in time.
+    diff = abs(leftTimestamp - rightTimestamp)
+    if diff > min_time_diff:
+        logging.info(f'Diff too big: {round(diff, 4)} seconds')
+        continue
+
+    # Check, if the new and the old images from the camera are the same.
+    if left_frame_old.shape[0] == 0 or right_frame_old.shape[0] == 0:
+        left_frame_old = leftFrame
+        right_frame_old = rightFrame
+    elif np.array_equal(leftFrame, left_frame_old) or np.array_equal(rightFrame, right_frame_old):
+        logging.info('duplicate in one of the cams')
+        continue
 
     # the pictures getting processed
     leftFound, leftCenter, leftFrameMasked = process_frame(leftFrame)
     rightFound, rightCenter, rightFrameMasked = process_frame(rightFrame)
-
 
     # If there is no object in left or right frame, this text is getting put onto the frame.
     if not leftFound or not rightFound:
@@ -118,12 +141,12 @@ while True:
 
         # in the case that the tracking is lost, the counter and the array of coordinates is getting reset
         count = 0
-        positions = np.array([])
+        positions = []
 
     else:
         count = count + 1
         # calculate the distance between the object and the baseline of the cameras [cm]
-        depth = tri.find_depth(right_point=rightCenter,
+        depth = tr.find_depth(right_point=rightCenter,
                                left_point=leftCenter,
                                frame_right=rightFrameMasked,
                                frame_left=leftFrameMasked,
@@ -131,7 +154,7 @@ while True:
                                f=f,
                                alpha=alpha)
         # the coordinates are put into an array
-        position = np.asarray((leftCenter[0], leftCenter[1], int(depth)))
+        position = (leftCenter[0], leftCenter[1], int(depth))
 
         # if the array is empty, the current coordinate is put as the first entry.
         positions.append(position)
@@ -147,8 +170,7 @@ while True:
                    (0, 255, 0), 3)
         cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1.2,
                    (0, 255, 0), 3)
-        print(count)
-        print(positions)
+        logging.info(positions)
 
     # the counter of iterations per second is put on to the frame as well
     cps.increment()
@@ -160,7 +182,7 @@ while True:
 
     # Hit "q" to close the window
     if cv.waitKey(1) & 0xFF == ord('q'):
-        print("Saving parameters!")
+        logging.info("Saving parameters!")
         file = open("params.txt", "w")
         for corrd in positions:
             file.write(str(corrd[0]) + "," + str(corrd[1]) + "," + str(corrd[2]) + "\n")
