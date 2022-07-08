@@ -14,10 +14,25 @@ totalStart = time.perf_counter()
 # Start default camera
 imgSample = 5000
 ms = []
+
+# initialise frames
+frameLeftOld = np.array([])
+frameRightOld = np.array([])
+duplicate = 0
 # Grab a few frames
 for i in range(0, imgSample):
     leftTimestamp, frameLeft = capLeft.getFrame()
     rightTimestamp, frameRight = capRight.getFrame()
+    if frameRightOld.shape[0] == 0 or frameLeftOld.shape[0] == 0:
+        print('i visit here once')
+        frameLeftOld = frameLeft
+        frameRightOld = frameRight
+    elif np.array_equal(frameLeft, frameLeftOld) or np.array_equal(frameRight, frameRightOld):
+       duplicate = duplicate + 1
+
+    frameLeftOld = frameLeft
+    frameRightOld = frameRight
+
     frames = np.hstack((frameLeft, frameRight))
     cv2.imshow("Frames", frames)
     end = time.perf_counter()
@@ -45,3 +60,4 @@ ax2.scatter(sorted_ms, p)
 ax2.set(xlabel='sorted seconds', ylabel='Verteilung')
 plt.show()
 print(totalEnd - totalStart)
+print(f'duplicates: {duplicate}')

@@ -13,6 +13,18 @@ class Triangulation:
         pass
 
     def find_depth(self, right_point, left_point, frame_right, frame_left, baseline, f, alpha) -> float:
+        """
+        Caculate the depth from the given coordinates with the disparity.
+
+        :param right_point: right frame center point from object
+        :param left_point: left frame center point from object
+        :param frame_right: right frame as np.array
+        :param frame_left: left frame as np.array
+        :param baseline: distance between the cameras
+        :param f: focal length
+        :param alpha: field of view
+        :return: distance in cm
+        """
 
         # toDo: Change Code Comments and revise the algorithm
 

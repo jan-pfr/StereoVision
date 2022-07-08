@@ -28,8 +28,8 @@ alpha = 60  # Camera field of view in the horizontal plane [degrees]
 lowerHSVRange = (26, 134, 28)
 higherHSVRange = (43, 255, 255)
 
-# Array for Cordinations of the object, if one is detected in the picture
-positions = np.array([])
+# Array for coordinates of the object, if one is detected in the picture
+positions = []
 
 # counter for keeping track of the amount of coordinates so far.
 count = 0
@@ -44,29 +44,52 @@ time.sleep(2.0)
 
 ### Functions that are used inside this application
 
-# put the Iterations per Second Number on to a frame
-def putIterationsPerSec(frame, iterations_per_sec):
+
+def put_iterations_per_sec(frame, iterations_per_sec):
+
+    """
+    Put the Iterations per Second Number on to a frame.
+
+    :param frame: as np.array
+    :param iterations_per_sec: number
+    :return: frame with number
+    """
 
     cv.putText(frame, "{:.0f} iterations/sec".format(iterations_per_sec),
         (10, 650), cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
     return frame
 
-# First the filter and than the objectDetection is applied.
-# If no Object is found, the boolean found is False and the center is None. The frame is returned in any case.
-def processFrame(frame):
+
+def process_frame(frame):
+
+    """
+    Apply filter and object detection on frame.
+    If no Object is found, the boolean found is False and the center is None.
+    The frame is returned in any case.
+
+    :param frame: as np.array
+    :return: center found or not as boolean, coordinates as array , maskedframe as np.array
+    """
 
     frameMasked = fltr.apply_filter(frame)
     found, center, frameMasked = od.detect_object(frame, frameMasked)
     return found, center, frameMasked
 
 
-# Get points and draws them onto the frame
-def drawPointsToFrame(points: np.array, frame):
+def draw_points_to_frame(points: np.array, frame) -> np.array:
+
+    """
+    Get points and draws them onto the frame.
+
+    :param points: Array of 3D Points, ony x and y are used
+    :param frame: as np.array
+    :return: the frame.
+    """
     for pt in points:
         x, y = pt[0], pt[1]
         if 0 <= x <= frame.shape[1] and 0 <= y <= frame.shape[0]:
             cv.circle(frame, (int(x), int(y)), 2, (255, 0, 0), 10)
-
+    return frame
 
 # optional counter for iterations per second
 cps = CountsPerSec().start()
@@ -82,8 +105,8 @@ while True:
     # toDo: Validate, that both pictures are new.
 
     # the pictures getting processed
-    leftFound, leftCenter, leftFrameMasked = processFrame(leftFrame)
-    rightFound, rightCenter, rightFrameMasked = processFrame(rightFrame)
+    leftFound, leftCenter, leftFrameMasked = process_frame(leftFrame)
+    rightFound, rightCenter, rightFrameMasked = process_frame(rightFrame)
 
 
     # If there is no object in left or right frame, this text is getting put onto the frame.
@@ -111,17 +134,13 @@ while True:
         position = np.asarray((leftCenter[0], leftCenter[1], int(depth)))
 
         # if the array is empty, the current coordinate is put as the first entry.
-        if positions.shape[0] == 0:
-            positions = position
-        else:
-            # if the array already contains a coordinate, the new coordinate is added
-            positions = np.vstack((positions, position))
+        positions.append(position)
 
         # determine if already enough coordinates were collected
         if count > min_samples:
             # return an array, containing predicted  n (20) coordinates.
-            predicted_path = tp.predict_path(positions, 20)
-            drawPointsToFrame(predicted_path, leftFrame)
+            predicted_path = tp.predict_path(np.asarray(positions), 20)
+            leftFrame = draw_points_to_frame(predicted_path, leftFrame)
 
         # since a depth has been calculated, it will be shown in the frame
         cv.putText(rightFrameMasked, "Distance: " + str(round(depth, 1)), (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1.2,
@@ -133,7 +152,7 @@ while True:
 
     # the counter of iterations per second is put on to the frame as well
     cps.increment()
-    leftFrame = putIterationsPerSec(leftFrame, cps.countsPerSec())
+    leftFrame = put_iterations_per_sec(leftFrame, cps.countsPerSec())
 
     # the left and right frame is stacked together for better view.
     frames = np.hstack((leftFrame, rightFrame))
