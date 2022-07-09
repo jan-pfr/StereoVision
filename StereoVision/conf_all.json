@@ -1,0 +1,54 @@
+// conf.all.json
+// json-Datei mit Konfig-Parametern für Upper/Lower-Farbwerte von
+# Objekt 1 und Objekt 2, Minimal-Größen, Kamera-Parameter....
+# Object 1 kann entweder Ball oder Rechteck (d.h. Tablett-Fläche) sein
+{
+	// Grüner Ball (klein, day conditions)
+        "color1": "0,200,0",
+        "lower1": "52, 69, 81",
+        "upper1": "102,217,  255",
+        "size1_thresh":  5,
+
+        # Grüner Ball (klein, night conditions)
+        "color1_n": "0,0,255",
+        "lower1_n": "29, 25, 0 ",
+        "upper1_n": " 99,227, 227",
+        "size1_thresh_n":  5,
+
+   # Mode of operation
+   		"useCamera": false,		# true: input from Cam: false: input from videoFile
+        "daylight": false,          # true: during daylight condition
+        "markBall": false,			# true: mark detected Ball in output
+        "fullVideo": true,			# true: saves complete video incl. lines, polygons
+     	"rotate": true,				# true to rotate from landscape to portrait mode
+     										# Attn: adjust frameWidth and frameHeight 
+     	"newMatrix": false,	  # true: only if camera(!)  has new pos and new persp.
+											# false: read from matrix file,
+											# Attn: when replaying video file, no matrix is applied
+		"saveTrace": false,		# true: trail is saved into output video
+     	
+    # Trajectory: Parameters for configuration
+     	"verticalSize": 1.75,		# vertical size of scene [m], used for pixelPerMeter
+     	"frameWidth": 480,		# width of (rotated) frame
+     	"frameHeight": 640,	# height of (rotated) frame
+     	"frameDepth": 20,       # "Depth" of ball Position [Pix]
+        "buffer": 32,                       # length of tail following ball object
+                
+    # File names used
+    	"matFile": "matrix.txt",	 			# file to store/retrieve perspective matrix
+		"ptsFile": "points.npy",					# points of trail incl. coords + timestamp
+		"videoFile": "../input/in.mjpg",		# video File to be analyzed 
+		
+	# UR5-Robot: Parameters for configuration
+		"useRobot": true,									# true: use robot (or simulation of)
+	    "robotHOST": "127.0.0.1",				# IP-Adr. of Robot-Controller
+	    #"robotHOST": "192.168.1.10",				# IP-Adr. of Robot-Controller
+	    "robotPORT": 30002,						# Port of Robot-Controller
+	    "robotXmin": -0.55,							# min X Coord of Robot arm [m] to catch ball
+	   	"robotXmax": 0.55,							# max X Coord of Robot arm [m] to catch ball	
+	    "robotYmin": -0.7,							# min Y Coord of Robot arm [m] to catch ball		 
+	    "robotYmax": -0.4,							# max Y Coord of Robot arm [m] to catch ball	   
+    
+    # Ende
+        "null": 0
+}
