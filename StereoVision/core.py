@@ -9,10 +9,40 @@ from objectDetection import ObjectDetection
 from counter import CountsPerSec
 from cameraCapture import CameraCapture
 from trajectoryPrediction import TrajectoryPrediction
-
+from AppState import AppState
+from HSVRangeCalibration import HSVRangeCalibration
 
 def parse_int_tuple(s: str):
     return tuple(int(i.strip()) for i in s[1:-1].split(','))
+
+
+def put_iterations_per_sec(frame, iterations_per_sec):
+    """
+    Put the Iterations per Second Number on to a frame.
+
+    :param frame: as np.array
+    :param iterations_per_sec: number
+    :return: frame with number
+    """
+
+    cv.putText(frame, "{:.0f} iterations/sec".format(iterations_per_sec),
+               (10, 650), cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
+    return frame
+
+
+def draw_points_to_frame(points: np.array, frame) -> np.array:
+    """
+    Get points and draws them onto the frame.
+
+    :param points: Array of 3D Points, ony x and y are used
+    :param frame: as np.array
+    :return: the frame.
+    """
+    for pt in points:
+        x, y = pt[0], pt[1]
+        if 0 <= x <= frame.shape[1] and 0 <= y <= frame.shape[0]:
+            cv.circle(frame, (int(x), int(y)), 2, (255, 0, 0), 10)
+    return frame
 
 
 class Application:
@@ -22,6 +52,9 @@ class Application:
         Import all necessary params and initiate variables.
 
         """
+
+        # define program state
+        self.appState = AppState.STARTUP
 
         # Configure parser so it is able to parse tuples
         self.config = configparser.ConfigParser(converters={'tuple': parse_int_tuple})
@@ -44,13 +77,8 @@ class Application:
         self.low_hsv_range = self.config['HSVRange'].gettuple('lowHSVRange')
         self.high_hsv_range = self.config['HSVRange'].gettuple('highHSVRange')
 
-        # Start Cameras
-        self.capLeft = CameraCapture(self.left_id).start()
-        self.capRight = CameraCapture(self.right_id).start()
-        time.sleep(2)  # warm up
-
         # Logger configuration
-        logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+        logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
         # Initialize helper objects
         self.tp = TrajectoryPrediction(self.min_samples)
@@ -65,25 +93,60 @@ class Application:
         self.left_frame_old = np.array([])
         self.right_frame_old = np.array([])
 
-        # counter for keeping track of the amount of coordinates so far.
-        self.count = 0
-
     def stop(self):
         """
         Stop the app.
 
         :return: Nothing
         """
-        self.capLeft.stop()
-        self.capRight.stop()
-        cv.destroyAllWindows()
 
-    def start(self):
+        cv.destroyAllWindows()
+        try:
+            self.capLeft.stop()
+            self.capRight.stop()
+        except:
+            pass
+
+    def pre_start(self) -> AppState:
+
+        while True:
+            print('Welcome to the StereoVision Setup. You can choose:\n'
+                  '1: Start the coordinate system calibration\n'
+                  '2: Start the HSV calibration\n'
+                  '3: Start the Stereo Vision setup\n'
+                  'q: Quit the Application.')
+
+            u_input = input('Type here: ')
+            if u_input == 'q':
+                self.appState = AppState.CLOSESTATE
+                break
+            elif int(u_input) == 1:
+                self.appState = AppState.COORDCALIBRATION
+                break
+            elif int(u_input) == 2:
+                self.appState = AppState.HSVCALIBRATION
+                break
+            elif int(u_input) == 3:
+                self.appState = AppState.NORMALSTATE
+                break
+            else:
+                print('No valid user input, try again.')
+
+    def start_stereo_vision(self):
         """
         Main loop. Press q to quit.
 
         :return: Nothing.
         """
+
+        # Cameras attributes in independent threads
+        capLeft = CameraCapture(self.left_id).start()
+        capRight = CameraCapture(self.right_id).start()
+        time.sleep(1)  # warm up cams
+
+        # create openCV window
+        window_name = 'Stereo Vision Application'
+        cv.namedWindow(window_name)
 
         # optional counter for iterations per second
         cps = CountsPerSec().start()
@@ -91,8 +154,8 @@ class Application:
         while True:
 
             # Collect frames from the camera threads.
-            leftTimestamp, leftFrame = self.capLeft.getFrame()
-            rightTimestamp, rightFrame = self.capRight.getFrame()
+            leftTimestamp, leftFrame = capLeft.getFrame()
+            rightTimestamp, rightFrame = capRight.getFrame()
 
             # Flip the frames.
             leftFrame = cv.flip(leftFrame, 0)
@@ -118,17 +181,15 @@ class Application:
 
             # If there is no object in left or right frame, this text is getting put onto the frame.
             if not leftFound or not rightFound:
-                cv.putText(rightFrameMasked, "No traceable object found", (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1.2,
-                           (0, 0, 255), 3)
-                cv.putText(leftFrameMasked, "No traceable object found", (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1.2,
-                           (0, 0, 255), 3)
+                cv.putText(rightFrameMasked, "No traceable object found", (10, 700), cv.FONT_HERSHEY_SIMPLEX, 1.2,
+                           (0, 0, 255), 2)
+                cv.putText(leftFrameMasked, "No traceable object found", (10, 700), cv.FONT_HERSHEY_SIMPLEX, 1.2,
+                           (0, 0, 255), 2)
 
                 # in the case that the tracking is lost, the counter and the array of coordinates is getting reset
-                self.count = 0
                 self.positions = []
 
             else:
-                self.count = self.count + 1
                 # calculate the distance between the object and the baseline of the cameras [cm]
                 depth = self.tr.find_depth(right_point=rightCenter,
                                            left_point=leftCenter,
@@ -137,54 +198,41 @@ class Application:
                                            baseline=self.baseline,
                                            f=self.focal_length,
                                            alpha=self.fov)
-                # the coordinates are put into an array
+
+                # the coordinates are put into a tuple
                 position = (leftCenter[0], leftCenter[1], int(depth))
 
-                # if the array is empty, the current coordinate is put as the first entry.
+                # if the array is empty, the current coordinate is put as the first entry
                 self.positions.append(position)
-                print(len(self.positions))
 
                 # determine if already enough coordinates were collected
-                if self.count > self.min_samples:
-
+                if len(self.positions) > self.min_samples:
                     # return an array, containing predicted  n (20) coordinates.
                     predicted_path = self.tp.predict_path(np.asarray(self.positions), 20)
-                    leftFrame = self.draw_points_to_frame(predicted_path, leftFrame)
+                    leftFrame = draw_points_to_frame(predicted_path, leftFrame)
 
                 # since a depth has been calculated, it will be shown in the frame
-                cv.putText(rightFrameMasked, "Distance: " + str(round(depth, 1)), (50, 50), cv.FONT_HERSHEY_SIMPLEX,
+                cv.putText(rightFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700), cv.FONT_HERSHEY_SIMPLEX,
                            1.2,
-                           (0, 255, 0), 3)
-                cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1.2,
-                           (0, 255, 0), 3)
+                           (0, 255, 0), 2)
+                cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700), cv.FONT_HERSHEY_SIMPLEX, 1.2,
+                           (0, 255, 0), 2)
                 logging.info(self.positions)
 
             # the counter of iterations per second is put on to the frame as well
             cps.increment()
-            leftFrame = self.put_iterations_per_sec(leftFrame, cps.countsPerSec())
+            leftFrame = put_iterations_per_sec(leftFrame, cps.countsPerSec())
 
             # the left and right frame is stacked together for better view.
             frames = np.hstack((leftFrame, rightFrame))
-            cv.imshow("Frames", frames)
+            cv.imshow(window_name, frames)
 
             # Hit "q" to close the window
             if cv.waitKey(1) & 0xFF == ord('q'):
                 logging.info("Saving parameters!")
-                self.stop()
+                logging.info('The OpenCV Window will freeze. This is a normal behaviour.')
+                cv.destroyAllWindows()
                 break
-
-    def put_iterations_per_sec(self, frame, iterations_per_sec):
-        """
-        Put the Iterations per Second Number on to a frame.
-
-        :param frame: as np.array
-        :param iterations_per_sec: number
-        :return: frame with number
-        """
-
-        cv.putText(frame, "{:.0f} iterations/sec".format(iterations_per_sec),
-                   (10, 650), cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
-        return frame
 
     def process_frame(self, frame):
         """
@@ -200,21 +248,18 @@ class Application:
         found, center, frameMasked = self.od.detect_object(frame, frameMasked)
         return found, center, frameMasked
 
-    def draw_points_to_frame(self, points: np.array, frame) -> np.array:
-        """
-        Get points and draws them onto the frame.
-
-        :param points: Array of 3D Points, ony x and y are used
-        :param frame: as np.array
-        :return: the frame.
-        """
-        for pt in points:
-            x, y = pt[0], pt[1]
-            if 0 <= x <= frame.shape[1] and 0 <= y <= frame.shape[0]:
-                cv.circle(frame, (int(x), int(y)), 2, (255, 0, 0), 10)
-        return frame
-
 
 if __name__ == "__main__":
     app = Application()
-    app.start()
+    while True:
+        app.pre_start()
+        if app.appState == AppState.NORMALSTATE:
+            app.start_stereo_vision()
+        elif app.appState == AppState.HSVCALIBRATION:
+            hsv = HSVRangeCalibration()
+            hsv.start()
+        elif app.appState == AppState.COORDCALIBRATION:
+            print('tbd')
+        elif app.appState == AppState.CLOSESTATE:
+            app.stop()
+            break
