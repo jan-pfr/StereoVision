@@ -1,6 +1,6 @@
-from StereoVision.cameraCapture import CameraCapture
+from bin.cameraCapture import CameraCapture
 import cv2 as cv
-from StereoVision.counter import CountsPerSec
+from bin.object_tracking.counter import CountsPerSec
 import numpy as np
 capLeft = CameraCapture(0).start()
 capRight = CameraCapture(1).start()

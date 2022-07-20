@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from StereoVision.trajectoryPrediction import TrajectoryPrediction
+from bin.object_tracking.trajectoryPrediction import TrajectoryPrediction
 import seaborn as sns
 
 tp = TrajectoryPrediction(2)

@@ -2,7 +2,7 @@ import cv2
 import time
 import matplotlib.pyplot as plt
 import numpy as np
-from StereoVision.cameraCapture import CameraCapture
+from bin.cameraCapture import CameraCapture
 
 capLeft = CameraCapture(0).start()
 capRight = CameraCapture(1).start()

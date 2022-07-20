@@ -1,20 +1,14 @@
 import logging
-import configparser
-import cv2 as cv
+
+from bin.cameraCapture import CameraCapture
+from bin.object_tracking.counter import CountsPerSec
+from bin.object_tracking.triangulation import Triangulation
+from bin.object_tracking.filter import Filter
+from bin.object_tracking.trajectoryPrediction import TrajectoryPrediction
+from bin.object_tracking.objectDetection import ObjectDetection
 import numpy as np
+import cv2 as cv
 import time
-from triangulation import Triangulation
-from filter import Filter
-from objectDetection import ObjectDetection
-from counter import CountsPerSec
-from cameraCapture import CameraCapture
-from trajectoryPrediction import TrajectoryPrediction
-from AppState import AppState
-from HSVRangeCalibration import HSVRangeCalibration
-
-def parse_int_tuple(s: str):
-    return tuple(int(i.strip()) for i in s[1:-1].split(','))
-
 
 def put_iterations_per_sec(frame, iterations_per_sec):
     """
@@ -44,25 +38,13 @@ def draw_points_to_frame(points: np.array, frame) -> np.array:
             cv.circle(frame, (int(x), int(y)), 2, (255, 0, 0), 10)
     return frame
 
+class ObjectTracking:
 
-class Application:
-
-    def __init__(self):
-        """
-        Import all necessary params and initiate variables.
-
-        """
-
-        # define program state
-        self.appState = AppState.STARTUP
-
-        # Configure parser so it is able to parse tuples
-        self.config = configparser.ConfigParser(converters={'tuple': parse_int_tuple})
-        self.config.read('config.ini')
-
+    def __init__(self, _config):
         # Import settings, fallbacks if the import fails
 
         # Trajectory Settings
+        self.config = _config
         self.min_samples = self.config['TrajectoryPredictionSettings'].getint('minSamples', fallback=2)
         self.min_time_diff = self.config['TrajectoryPredictionSettings'].getfloat('minTimeDifference', fallback=0.04)
 
@@ -93,46 +75,7 @@ class Application:
         self.left_frame_old = np.array([])
         self.right_frame_old = np.array([])
 
-    def stop(self):
-        """
-        Stop the app.
-
-        :return: Nothing
-        """
-
-        cv.destroyAllWindows()
-        try:
-            self.capLeft.stop()
-            self.capRight.stop()
-        except:
-            pass
-
-    def pre_start(self) -> AppState:
-
-        while True:
-            print('Welcome to the StereoVision Setup. You can choose:\n'
-                  '1: Start the coordinate system calibration\n'
-                  '2: Start the HSV calibration\n'
-                  '3: Start the Stereo Vision setup\n'
-                  'q: Quit the Application.')
-
-            u_input = input('Type here: ')
-            if u_input == 'q':
-                self.appState = AppState.CLOSESTATE
-                break
-            elif int(u_input) == 1:
-                self.appState = AppState.COORDCALIBRATION
-                break
-            elif int(u_input) == 2:
-                self.appState = AppState.HSVCALIBRATION
-                break
-            elif int(u_input) == 3:
-                self.appState = AppState.NORMALSTATE
-                break
-            else:
-                print('No valid user input, try again.')
-
-    def start_stereo_vision(self):
+    def start(self):
         """
         Main loop. Press q to quit.
 
@@ -212,12 +155,14 @@ class Application:
                     leftFrame = draw_points_to_frame(predicted_path, leftFrame)
 
                 # since a depth has been calculated, it will be shown in the frame
-                cv.putText(rightFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700), cv.FONT_HERSHEY_SIMPLEX,
+                cv.putText(rightFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700),
+                           cv.FONT_HERSHEY_SIMPLEX,
                            1.2,
                            (0, 255, 0), 2)
-                cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700), cv.FONT_HERSHEY_SIMPLEX, 1.2,
+                cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700), cv.FONT_HERSHEY_SIMPLEX,
+                           1.2,
                            (0, 255, 0), 2)
-                logging.info(self.positions)
+                # logging.info(self.positions)
 
             # the counter of iterations per second is put on to the frame as well
             cps.increment()
@@ -231,6 +176,8 @@ class Application:
             if cv.waitKey(1) & 0xFF == ord('q'):
                 logging.info("Saving parameters!")
                 logging.info('The OpenCV Window will freeze. This is a normal behaviour.')
+                capLeft.stop()
+                capRight.stop()
                 cv.destroyAllWindows()
                 break
 
@@ -248,18 +195,11 @@ class Application:
         found, center, frameMasked = self.od.detect_object(frame, frameMasked)
         return found, center, frameMasked
 
+    def __del__(self):
+        """
+        Destroy current instance of the object.
 
-if __name__ == "__main__":
-    app = Application()
-    while True:
-        app.pre_start()
-        if app.appState == AppState.NORMALSTATE:
-            app.start_stereo_vision()
-        elif app.appState == AppState.HSVCALIBRATION:
-            hsv = HSVRangeCalibration()
-            hsv.start()
-        elif app.appState == AppState.COORDCALIBRATION:
-            print('tbd')
-        elif app.appState == AppState.CLOSESTATE:
-            app.stop()
-            break
+        :return: Nothing
+        """
+        pass
+

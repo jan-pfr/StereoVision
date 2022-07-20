@@ -70,7 +70,7 @@ class urControl():
                 break
             except OSError as msg:
                 self.s.close()
-                print("Socket open failed: %pts1= s" % msg)
+                print(f"Socket open failed: {msg}")
                 raise EnvironmentError('No connection to Robot')
 
     def close(self):
