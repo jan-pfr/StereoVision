@@ -14,10 +14,9 @@ class HSVRangeCalibration:
     def __init__(self, _config):
         # Read configuration
         self.config = _config
-
         self.left_id = self.config['CameraSettings'].getint('leftID', fallback=0)
 
-        # HSV ranges
+        # initial HSV ranges
         self.initial_hsv_low = self.config['HSVRange'].gettuple('lowHSVRange')
         self.initial_hsv_high = self.config['HSVRange'].gettuple('highHSVRange')
 

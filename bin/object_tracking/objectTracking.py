@@ -168,7 +168,7 @@ class ObjectTracking:
             cps.increment()
             leftFrame = put_iterations_per_sec(leftFrame, cps.countsPerSec())
 
-            # the left and right frame is stacked together for better view.
+            # the left and right frame are stacked together for better view.
             frames = np.hstack((leftFrame, rightFrame))
             cv.imshow(window_name, frames)
 

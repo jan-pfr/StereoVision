@@ -2,6 +2,9 @@ import configparser
 from bin.object_tracking.objectTracking import ObjectTracking
 from AppState import AppState
 from bin.hsv_calibration.hsvCalibration import HSVRangeCalibration
+from bin.coordinates_calibration.coordCalibration import CoordCalibration
+import numpy as np
+
 
 
 def parse_int_tuple(s: str):
@@ -23,12 +26,17 @@ class Application:
         self.config = configparser.ConfigParser(converters={'tuple': parse_int_tuple})
         self.config.read('./config/config.ini')
 
+        # initiate transformation_matrix
+        self.transformation_matrix = np.array([])
+
     def main(self) -> AppState:
 
         self.update_config()
 
         while True:
-            print('Welcome to the bin Setup. You can choose:\n'
+            print('Welcome to the StereoVision Setup. \n'
+                  'You have to setup the coordination system calibration first. \n'
+                  'You can choose:\n'
                   '1: Start the Stereo Vision setup\n'
                   '2: Start the coordinate system calibration\n'
                   '3: Start the HSV calibration\n'
@@ -56,6 +64,9 @@ class Application:
     def update_config(self):
         self.config.read('./config/config.ini')
 
+    def update_trans_matrix(self, matrix: np.array):
+        self.transformation_matrix = matrix
+
 
 if __name__ == "__main__":
     app = Application()
@@ -71,7 +82,10 @@ if __name__ == "__main__":
             hsv.start()
             del hsv
         elif app.appState == AppState.COORDCALIBRATION:
-            print('tbd')
+            coord_calibration = CoordCalibration(app.config)
+            coord_calibration.start()
+            app.transformation_matrix = coord_calibration.trans_matrix
+            del coord_calibration
         elif app.appState == AppState.CLOSESTATE:
             del app
             break
