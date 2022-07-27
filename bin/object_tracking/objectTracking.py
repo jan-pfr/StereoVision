@@ -1,14 +1,15 @@
 import logging
+import time
+
+import cv2 as cv
+import numpy as np
 
 from bin.cameraCapture import CameraCapture
 from bin.object_tracking.counter import CountsPerSec
-from bin.object_tracking.triangulation import Triangulation
 from bin.object_tracking.filter import Filter
-from bin.object_tracking.trajectoryPrediction import TrajectoryPrediction
 from bin.object_tracking.objectDetection import ObjectDetection
-import numpy as np
-import cv2 as cv
-import time
+from bin.object_tracking.trajectoryPrediction import TrajectoryPrediction
+from bin.object_tracking.triangulation import Triangulation
 
 
 def put_iterations_per_sec(frame, iterations_per_sec):
@@ -78,7 +79,6 @@ class ObjectTracking:
         # Array for coordinates of the object, if one is detected in the picture
         self.positions = []
         self.trans_matrix = self.config['AffineTransformationMatrix'].getarray('matrix')
-        print(self.trans_matrix.shape)
         self.predicted_path = None
 
         # Empty Arrays for old frames

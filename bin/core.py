@@ -1,11 +1,13 @@
-import configparser
-from bin.object_tracking.objectTracking import ObjectTracking
-from AppState import AppState
-from bin.hsv_calibration.hsvCalibration import HSVRangeCalibration
-from bin.coordinates_calibration.coordCalibration import CoordCalibration
-import numpy as np
-import re
 import ast
+import configparser
+import re
+
+import numpy as np
+
+from AppState import AppState
+from bin.coordinates_calibration.coordCalibration import CoordCalibration
+from bin.hsv_calibration.hsvCalibration import HSVRangeCalibration
+from bin.object_tracking.objectTracking import ObjectTracking
 
 
 # Source: https://stackoverflow.com/questions/2835559/parsing-values-from-a-config-file-in-python

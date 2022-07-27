@@ -1,8 +1,7 @@
-import cv2
 import time
-import matplotlib.pyplot as plt
+
+import cv2
 import numpy as np
-from bin.cameraCapture import CameraCapture
 
 capLeft = cv2.VideoCapture(0)
 capRight = cv2.VideoCapture(1)

@@ -1,6 +1,6 @@
 import numpy as np
-from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import RANSACRegressor
+from sklearn.preprocessing import PolynomialFeatures
 
 
 class TrajectoryPrediction:

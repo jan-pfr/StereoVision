@@ -3,11 +3,12 @@
 # neu in V2: Ansteuerung mit "korrektem" x-Abschnitt, mit conf-Datei für Parameter
 # neu in V3: interne Transformation von Pixel-Koord (0...width [Pixel]) nach Robot-Coords ( [m])
 #
+import argparse  # for parsing command line argument
 import socket  # for sending commands to robot
 import time  # for waiting some time for robot to complete move
-import commentjson  # for parsing config-file with parameters
-import argparse  # for parsing command line argument
 from enum import Enum  # enumerate some predefined positions
+
+import commentjson  # for parsing config-file with parameters
 import numpy as np  # math
 
 # see config file: HOST = "127.0.0.1" # The remote host

@@ -1,12 +1,14 @@
-import numpy as np
-import cv2 as cv
 import logging
-from bin.object_tracking.triangulation import Triangulation
-from bin.object_tracking.filter import Filter
-from bin.object_tracking.trajectoryPrediction import TrajectoryPrediction
-from bin.object_tracking.objectDetection import ObjectDetection
 import time
+
+import cv2 as cv
+import numpy as np
+
 from bin.cameraCapture import CameraCapture
+from bin.object_tracking.filter import Filter
+from bin.object_tracking.objectDetection import ObjectDetection
+from bin.object_tracking.trajectoryPrediction import TrajectoryPrediction
+from bin.object_tracking.triangulation import Triangulation
 
 
 class CoordCalibration:

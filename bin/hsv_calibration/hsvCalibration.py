@@ -1,6 +1,8 @@
 import logging
+
 import cv2 as cv
 import numpy as np
+
 from bin.cameraCapture import CameraCapture
 
 
