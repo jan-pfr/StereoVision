@@ -4,11 +4,33 @@ from AppState import AppState
 from bin.hsv_calibration.hsvCalibration import HSVRangeCalibration
 from bin.coordinates_calibration.coordCalibration import CoordCalibration
 import numpy as np
+import re
+import ast
 
 
-
+# Source: https://stackoverflow.com/questions/2835559/parsing-values-from-a-config-file-in-python
 def parse_int_tuple(s: str):
+    """
+    Parse a string into a tuple of ints.
+    :param s:
+    :return:
+    """
     return tuple(int(i.strip()) for i in s[1:-1].split(','))
+
+
+def str2array(s):
+    """
+    Remove space after [
+    Replace commas and spaces
+
+    :param s:
+    :return:
+    """
+    # Remove space after [
+    s=re.sub('\[ +', '[', s.strip())
+    # Replace commas and spaces
+    s=re.sub('[,\s]+', ', ', s)
+    return np.array(ast.literal_eval(s))
 
 
 class Application:
@@ -23,13 +45,15 @@ class Application:
         self.appState = AppState.STARTUP
 
         # Configure parser so it is able to parse tuples
-        self.config = configparser.ConfigParser(converters={'tuple': parse_int_tuple})
+        self.config = configparser.ConfigParser(converters={'tuple': parse_int_tuple, 'array': str2array})
         self.config.read('./config/config.ini')
 
-        # initiate transformation_matrix
-        self.transformation_matrix = np.array([])
+    def main(self):
+        """
+        Main loop of the application.
 
-    def main(self) -> AppState:
+        :return:
+        """
 
         self.update_config()
 
@@ -64,11 +88,9 @@ class Application:
     def update_config(self):
         self.config.read('./config/config.ini')
 
-    def update_trans_matrix(self, matrix: np.array):
-        self.transformation_matrix = matrix
-
 
 if __name__ == "__main__":
+
     app = Application()
     while True:
         app.main()
@@ -84,7 +106,6 @@ if __name__ == "__main__":
         elif app.appState == AppState.COORDCALIBRATION:
             coord_calibration = CoordCalibration(app.config)
             coord_calibration.start()
-            app.transformation_matrix = coord_calibration.trans_matrix
             del coord_calibration
         elif app.appState == AppState.CLOSESTATE:
             del app

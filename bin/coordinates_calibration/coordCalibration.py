@@ -6,7 +6,6 @@ from bin.object_tracking.filter import Filter
 from bin.object_tracking.trajectoryPrediction import TrajectoryPrediction
 from bin.object_tracking.objectDetection import ObjectDetection
 import time
-
 from bin.cameraCapture import CameraCapture
 
 
@@ -35,6 +34,8 @@ class CoordCalibration:
 
         self.window_name = 'Coordinate Calibration'
         cv.namedWindow(self.window_name)
+        cv.namedWindow(self.window_name, cv.WINDOW_NORMAL)
+        cv.resizeWindow(self.window_name, 1280, 720)
 
         # Logger configuration
         logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
@@ -98,7 +99,7 @@ class CoordCalibration:
                 cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700), cv.FONT_HERSHEY_SIMPLEX,
                            1.2,
                            (0, 255, 0), 2)
-                cv.putText(leftFrameMasked, "Press s for saving the coordinate. coors left: " + str(counter), (10, 700),
+                cv.putText(leftFrameMasked, "Press s for saving the coordinate. coors left: " + str(counter), (10, 600),
                            cv.FONT_HERSHEY_SIMPLEX,
                            1.2,
                            (0, 255, 0), 2)
@@ -127,13 +128,27 @@ class CoordCalibration:
                 break
 
     def calculate_trans_matrix(self):
+        """
+        Estimate affine transformation matrix
+        :return:
+        """
         ret, trans_matrix, mask = cv.estimateAffine3D(np.float32(self.positions), np.float32((self.pos1, self.pos2, self.pos3, self.pos4)), confidence=.99)
         if not ret:
             logging.info('Transform failed.')
         else:
-            self.trans_matrix = trans_matrix
+            self.update_config(trans_matrix)
             print(trans_matrix)
 
+    def update_config(self, matrix: np.array):
+        """
+        Takes the numpy array as input and persist it into the file config.ini.
+
+        :return:
+        """
+        self.config['AffineTransformationMatrix']['matrix'] = str(matrix)
+
+        with open("./config/config.ini", "w") as file:
+            self.config.write(file)
 
     def process_frame(self, frame):
         """

@@ -16,8 +16,6 @@ sloMo = 0.9  # slow motion factor: 0.2 ... 1.0 ... 2.0
 t1 = 0.9 * sloMo  # time constants [s] to wait for robot to complete
 t2 = 0.5 * sloMo
 t3 = 0.9  # time before next command
-
-
 class Position(Enum):
     # poses in Standard orientation, i.e. +X-axis pointing forward
     right = 0

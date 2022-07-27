@@ -10,6 +10,7 @@ import numpy as np
 import cv2 as cv
 import time
 
+
 def put_iterations_per_sec(frame, iterations_per_sec):
     """
     Put the Iterations per Second Number on to a frame.
@@ -38,9 +39,15 @@ def draw_points_to_frame(points: np.array, frame) -> np.array:
             cv.circle(frame, (int(x), int(y)), 2, (255, 0, 0), 10)
     return frame
 
+
 class ObjectTracking:
 
     def __init__(self, _config):
+        """
+        Initialize the object.
+
+        :param _config:
+        """
         # Import settings, fallbacks if the import fails
 
         # Trajectory Settings
@@ -70,6 +77,9 @@ class ObjectTracking:
 
         # Array for coordinates of the object, if one is detected in the picture
         self.positions = []
+        self.trans_matrix = self.config['AffineTransformationMatrix'].getarray('matrix')
+        print(self.trans_matrix.shape)
+        self.predicted_path = None
 
         # Empty Arrays for old frames
         self.left_frame_old = np.array([])
@@ -78,6 +88,7 @@ class ObjectTracking:
     def start(self):
         """
         Main loop. Press q to quit.
+
 
         :return: Nothing.
         """
@@ -89,7 +100,8 @@ class ObjectTracking:
 
         # create openCV window
         window_name = 'Stereo Vision Application'
-        cv.namedWindow(window_name)
+        cv.namedWindow(window_name, cv.WINDOW_NORMAL)
+        cv.resizeWindow(window_name, 1280, 1080)
 
         # optional counter for iterations per second
         cps = CountsPerSec().start()
@@ -106,7 +118,7 @@ class ObjectTracking:
 
             # Check if the images are too far apart in time.
             diff = abs(leftTimestamp - rightTimestamp)
-            if diff > self.min_time_diff:
+            if 0.029 > diff > self.min_time_diff:
                 logging.info(f'Diff too big: {round(diff, 4)} seconds')
                 continue
 
@@ -117,7 +129,6 @@ class ObjectTracking:
             elif np.array_equal(leftFrame, self.left_frame_old) or np.array_equal(rightFrame, self.right_frame_old):
                 logging.info('duplicate in one of the cams')
                 continue
-
             # the pictures getting processed
             leftFound, leftCenter, leftFrameMasked = self.process_frame(leftFrame)
             rightFound, rightCenter, rightFrameMasked = self.process_frame(rightFrame)
@@ -150,9 +161,12 @@ class ObjectTracking:
 
                 # determine if already enough coordinates were collected
                 if len(self.positions) > self.min_samples:
-                    # return an array, containing predicted  n (20) coordinates.
-                    predicted_path = self.tp.predict_path(np.asarray(self.positions), 20)
-                    leftFrame = draw_points_to_frame(predicted_path, leftFrame)
+                    # return an array, containing predicted n (20) coordinates.
+                    self.predicted_path = self.tp.predict_path(np.asarray(self.positions), 20)
+                    leftFrame = draw_points_to_frame(self.predicted_path, leftFrame)
+                    intercept = self.find_interception(self.predicted_path)
+                    cv.circle(leftFrame, (int(intercept[1][0]), int(intercept[1][1])), 2, (255, 255, 0), 18)
+                    self.move_to_robot(intercept[0])
 
                 # since a depth has been calculated, it will be shown in the frame
                 cv.putText(rightFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700),
@@ -162,11 +176,10 @@ class ObjectTracking:
                 cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700), cv.FONT_HERSHEY_SIMPLEX,
                            1.2,
                            (0, 255, 0), 2)
-                # logging.info(self.positions)
 
             # the counter of iterations per second is put on to the frame as well
             cps.increment()
-            leftFrame = put_iterations_per_sec(leftFrame, cps.countsPerSec())
+            # leftFrame = put_iterations_per_sec(leftFrame, cps.countsPerSec())
 
             # the left and right frame are stacked together for better view.
             frames = np.hstack((leftFrame, rightFrame))
@@ -195,6 +208,37 @@ class ObjectTracking:
         found, center, frameMasked = self.od.detect_object(frame, frameMasked)
         return found, center, frameMasked
 
+    def find_interception(self, positions: np.array):
+        """
+        Find the interception point of the predicted path.
+        :param positions:
+        :return:
+        """
+        # baseline
+        b = 720
+        x, y, z = positions[:, 0], positions[:, 1], positions[:, 2]
+        # function for Y relative to X
+        y_x = np.polyfit(y, x, 2)
+        # function for Y relative to Z
+        y_z = np.polyfit(y, z, 2)
+
+        # calculate the interception of the two functions by using the y-coordinate as a parameter
+        x_intercept = np.polyval(y_x, b)
+        z_intercept = np.polyval(y_z, b)
+        # return the interception point
+        interception_rob = np.dot(self.trans_matrix, np.asarray((x_intercept, b, z_intercept, 1)))
+        interception_cam = np.array([x_intercept, b, z_intercept])
+        return interception_rob, interception_cam
+
+    def move_to_robot(self, pos: np.array):
+        """
+        Move the robot to the given position.
+        :param pos:
+        :return:
+        """
+        print(pos[0], pos[1], pos[2])
+        return
+
     def __del__(self):
         """
         Destroy current instance of the object.
@@ -202,4 +246,3 @@ class ObjectTracking:
         :return: Nothing
         """
         pass
-

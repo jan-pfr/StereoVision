@@ -11,8 +11,8 @@ def printSomething (points):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     fig2, (ax1, ax2, ax3) = plt.subplots(1, 3)
-    ax.elev = -69
-    ax.azim = 90
+    #ax.elev = -69
+    #ax.azim = 90
 
     ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=np.arange(points.shape[0]))
     pointsPredicted = tp.predict_path(points, 15)
@@ -33,10 +33,7 @@ file = open("../params.txt", "r")
 corrds = []
 for corrd in file:
     corrds.append(corrd.split(","))
-for corrd in corrds:
-    corrd[2] = corrd[2].strip()
-
-printSomething(np.asarray(corrds).astype(int))
+printSomething(np.asarray(corrds).astype(float))
 # labels and input is switched.
 # ax.plot3D(X, Z, Y, 'red')
 # ax.plot3D(fitx, fitz, fity, 'blue')

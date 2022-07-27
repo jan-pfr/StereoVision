@@ -6,7 +6,7 @@ from sklearn.linear_model import RANSACRegressor
 class TrajectoryPrediction:
 
     """
-    Class to predict a Path based on given points.
+    Class to predict a path based on given points.
     """
 
     def __init__(self, min_samples: int):
@@ -30,11 +30,11 @@ class TrajectoryPrediction:
         """
 
         ts = np.arange(path.shape[0])[:, np.newaxis]
-        xr = self.Xr.fit(ts, path[:, 0])
-        ts_transformed = self.Yr.fit_transform(ts)
+        xr = self.Xr.fit(ts, path[:, 0]) # Lineare Regression über die X Werte
+        ts_transformed = self.Yr.fit_transform(ts) # polynomische Features für die Zeit
 
         yr = self.YrR.fit(ts_transformed, path[:, 1])
-        zr = self.Zr.fit(ts, path[:, 2])
+        zr = self.Zr.fit(ts, path[:, 2]) # finde zu den zugehörigen x-Werten (ts) die y-Werte (path[:, 2])
 
         ts = np.arange(path.shape[0] + next_points)[:, np.newaxis]
         Y_transformed = self.Yr.fit_transform(np.arange(ts.shape[0])[:, np.newaxis])
