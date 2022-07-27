@@ -7,13 +7,13 @@ from bin.object_tracking.trajectoryPrediction import TrajectoryPrediction
 tp = TrajectoryPrediction(2)
 
 
-def printSomething (points):
+def printSomething(points):
     sns.set_style("whitegrid", {'axes.grid': False})
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     fig2, (ax1, ax2, ax3) = plt.subplots(1, 3)
-    #ax.elev = -69
-    #ax.azim = 90
+    # ax.elev = -69
+    # ax.azim = 90
 
     ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=np.arange(points.shape[0]))
     pointsPredicted = tp.predict_path(points, 15)
@@ -29,6 +29,7 @@ def printSomething (points):
     ax.set_ylabel('y')
     ax.set_zlabel('z')
     plt.show()
+
 
 file = open("../params.txt", "r")
 corrds = []

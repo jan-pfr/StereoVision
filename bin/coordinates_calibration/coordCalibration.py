@@ -134,7 +134,9 @@ class CoordCalibration:
         Estimate affine transformation matrix
         :return:
         """
-        ret, trans_matrix, mask = cv.estimateAffine3D(np.float32(self.positions), np.float32((self.pos1, self.pos2, self.pos3, self.pos4)), confidence=.99)
+        ret, trans_matrix, mask = cv.estimateAffine3D(np.float32(self.positions),
+                                                      np.float32((self.pos1, self.pos2, self.pos3, self.pos4)),
+                                                      confidence=.99)
         if not ret:
             logging.info('Transform failed.')
         else:

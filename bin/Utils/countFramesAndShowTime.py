@@ -7,7 +7,6 @@ capLeft = cv2.VideoCapture(0)
 capRight = cv2.VideoCapture(1)
 time.sleep(2)
 
-
 totalStart = time.perf_counter()
 
 # Start default camera
@@ -29,7 +28,7 @@ for i in range(0, imgSample):
         frameLeftOld = frameLeft
         frameRightOld = frameRight
     elif np.array_equal(frameLeft, frameLeftOld) or np.array_equal(frameRight, frameRightOld):
-       duplicate = duplicate + 1
+        duplicate = duplicate + 1
 
     frameLeftOld = frameLeft
     frameRightOld = frameRight
@@ -37,16 +36,16 @@ for i in range(0, imgSample):
     frames = np.hstack((frameLeft, frameRight))
     cv2.imshow("test", frames)
     end = time.perf_counter()
-    #seconds = abs(leftTimestamp-rightTimestamp)
-    #ms.append(seconds)
+    # seconds = abs(leftTimestamp-rightTimestamp)
+    # ms.append(seconds)
     if cv2.waitKey(1) & 0xFF == ord('q'):
-       # capLeft.stop()
-       # capRight.stop()
+        # capLeft.stop()
+        # capRight.stop()
         break
 
 totalEnd = time.perf_counter()
-#capRight.stop()
-#capLeft.stop()
+# capRight.stop()
+# capLeft.stop()
 cv2.destroyAllWindows()
 # ms = np.asarray(ms)
 # samples = np.arange(ms.shape[0])[:, np.newaxis]

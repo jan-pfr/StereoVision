@@ -44,4 +44,3 @@ while True:
     if cv.waitKey(1) & 0xFF == ord('q'):
         cv.destroyAllWindows()
         break
-

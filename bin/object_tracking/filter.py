@@ -3,7 +3,6 @@ import numpy as np
 
 
 class Filter:
-
     """
     Class to mask out a curtain HSV range on a given frame.
     """

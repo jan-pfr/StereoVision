@@ -29,9 +29,9 @@ def str2array(s):
     :return:
     """
     # Remove space after [
-    s=re.sub('\[ +', '[', s.strip())
+    s = re.sub('\[ +', '[', s.strip())
     # Replace commas and spaces
-    s=re.sub('[,\s]+', ', ', s)
+    s = re.sub('[,\s]+', ', ', s)
     return np.array(ast.literal_eval(s))
 
 
