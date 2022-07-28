@@ -51,6 +51,7 @@ class HSVRangeCalibration:
         self.config['HSVRange']['lowHSVRange'] = str(self.hsv_low)
         self.config['HSVRange']['highHSVRange'] = str(self.hsv_high)
 
+
         with open("./config/config.ini", "w") as file:
             self.config.write(file)
 

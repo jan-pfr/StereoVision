@@ -19,10 +19,8 @@ class CoordCalibration:
         self.hsv_low = self.config['HSVRange'].gettuple('lowHSVRange')
         self.hsv_high = self.config['HSVRange'].gettuple('highHSVRange')
 
-        self.pos1 = self.config['CoordCalibration'].gettuple('pos1')
-        self.pos2 = self.config['CoordCalibration'].gettuple('pos2')
-        self.pos3 = self.config['CoordCalibration'].gettuple('pos3')
-        self.pos4 = self.config['CoordCalibration'].gettuple('pos4')
+        #
+        self.calibration_points = self.config['CoordCalibration'].getarray('calibpoints')
 
         self.min_samples = self.config['TrajectoryPredictionSettings'].getint('minSamples', fallback=2)
         self.min_time_diff = self.config['TrajectoryPredictionSettings'].getfloat('minTimeDifference', fallback=0.04)
@@ -35,7 +33,6 @@ class CoordCalibration:
         self.right_id = self.config['CameraSettings'].getint('rightID', fallback=1)
 
         self.window_name = 'Coordinate Calibration'
-        cv.namedWindow(self.window_name)
         cv.namedWindow(self.window_name, cv.WINDOW_NORMAL)
         cv.resizeWindow(self.window_name, 1280, 720)
 
@@ -52,7 +49,7 @@ class CoordCalibration:
         self.trans_matrix = np.array([])
 
     def start(self):
-        counter = 4
+        counter = 1
 
         # Cameras attributes in independent threads
         capLeft = CameraCapture(self.left_id).start()
@@ -94,40 +91,35 @@ class CoordCalibration:
                 position = (leftCenter[0], leftCenter[1], int(depth))
 
                 # since a depth has been calculated, it will be shown in the frame
-                cv.putText(rightFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700),
-                           cv.FONT_HERSHEY_SIMPLEX,
-                           1.2,
-                           (0, 255, 0), 2)
-                cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700), cv.FONT_HERSHEY_SIMPLEX,
-                           1.2,
-                           (0, 255, 0), 2)
-                cv.putText(leftFrameMasked, "Press s for saving the coordinate. coors left: " + str(counter), (10, 600),
-                           cv.FONT_HERSHEY_SIMPLEX,
-                           1.2,
-                           (0, 255, 0), 2)
+                try:
+                    cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700), cv.FONT_HERSHEY_SIMPLEX,
+                               1.2,
+                               (0, 255, 0), 2)
+                    cv.putText(leftFrameMasked, "Amount (max. 4): " + str(counter - 1), (10, 650),
+                               cv.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 1)
+                    cv.putText(leftFrameMasked,
+                               "Press s for saving the coordinate: " + str(self.calibration_points[counter - 1]),
+                               (10, 600), cv.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 1)
+                except:
+                    pass
 
-            # the left and right frame are stacked together for better view.
+                    # the left and right frame are stacked together for better view.
             frames = np.hstack((leftFrame, rightFrame))
             cv.imshow(self.window_name, frames)
 
-            if cv.waitKey(1) & 0xFF == ord('s'):
-                self.positions.append(position)
-                counter = counter - 1
-                if counter == 0:
-                    logging.info('Enough coordinates collected.')
-                    logging.info('The OpenCV Window will freeze. This is a normal behaviour.')
-                    capLeft.stop()
-                    capRight.stop()
-                    cv.destroyAllWindows()
+            key = cv.waitKey(1)
+            if key == ord('q') or counter == 5:
+                if counter == 5:
                     self.calculate_trans_matrix()
-                    break
-            elif cv.waitKey(1) & 0xFF == ord('q'):
                 logging.info("Saving parameters!")
                 logging.info('The OpenCV Window will freeze. This is a normal behaviour.')
                 capLeft.stop()
                 capRight.stop()
                 cv.destroyAllWindows()
                 break
+            elif key == ord('s'):
+                self.positions.append(position)
+                counter = counter + 1
 
     def calculate_trans_matrix(self):
         """
@@ -135,7 +127,7 @@ class CoordCalibration:
         :return:
         """
         ret, trans_matrix, mask = cv.estimateAffine3D(np.float32(self.positions),
-                                                      np.float32((self.pos1, self.pos2, self.pos3, self.pos4)),
+                                                      np.float32(self.calibration_points),
                                                       confidence=.99)
         if not ret:
             logging.info('Transform failed.')
