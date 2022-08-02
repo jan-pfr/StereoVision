@@ -63,6 +63,7 @@ class ObjectTracking:
         self.right_id = self.config['CameraSettings'].getint('rightID', fallback=1)
         self.exposure = self.config['CameraSettings'].getint('exposure', fallback=0)
         self.gain = self.config['CameraSettings'].getint('gain', fallback=0)
+        self.img_size = self.config['CameraSettings'].gettuple('imgSize', fallback=(1280, 720))
 
         # HSV ranges
         self.low_hsv_range = self.config['HSVRange'].gettuple('lowHSVRange')
@@ -95,8 +96,8 @@ class ObjectTracking:
         """
 
         # Cameras attributes in independent threads
-        capLeft = CameraCapture(self.left_id, self.exposure, self.gain).start()
-        capRight = CameraCapture(self.right_id, self.exposure, self.gain).start()
+        capLeft = CameraCapture(self.left_id, self.exposure, self.gain, self.img_size).start()
+        capRight = CameraCapture(self.right_id, self.exposure, self.gain, self.img_size).start()
         time.sleep(1)  # warm up cams
 
         # create openCV window
@@ -134,12 +135,15 @@ class ObjectTracking:
             leftFound, leftCenter, leftFrameMasked = self.process_frame(leftFrame)
             rightFound, rightCenter, rightFrameMasked = self.process_frame(rightFrame)
 
+            # get dimensions of the frame for setting the text
+            height, width, depth_frame = leftFrameMasked.shape
+
             # If there is no object in left or right frame, this text is getting put onto the frame.
             if not leftFound or not rightFound:
-                cv.putText(rightFrameMasked, "No traceable object found", (10, 700), cv.FONT_HERSHEY_SIMPLEX, 1.2,
-                           (0, 0, 255), 2)
-                cv.putText(leftFrameMasked, "No traceable object found", (10, 700), cv.FONT_HERSHEY_SIMPLEX, 1.2,
-                           (0, 0, 255), 2)
+                cv.putText(rightFrameMasked, "No traceable object found", (10, height - 20), cv.FONT_HERSHEY_SIMPLEX, 1,
+                           (0, 0, 255), 1)
+                cv.putText(leftFrameMasked, "No traceable object found", (10, height - 20), cv.FONT_HERSHEY_SIMPLEX, 1,
+                           (0, 0, 255), 1)
 
                 # in the case that the tracking is lost, the counter and the array of coordinates is getting reset
                 self.positions = []
@@ -164,18 +168,18 @@ class ObjectTracking:
                     # return an array, containing predicted n (20) coordinates.
                     self.predicted_path = self.tp.predict_path(np.asarray(self.positions), 20)
                     leftFrame = draw_points_to_frame(self.predicted_path, leftFrame)
-                    intercept = self.find_interception(self.predicted_path)
+                    intercept = self.find_interception(self.predicted_path, height)
                     cv.circle(leftFrame, (int(intercept[1][0]), int(intercept[1][1])), 2, (255, 255, 0), 18)
                     self.move_to_robot(intercept[0])
 
                 # since a depth has been calculated, it will be shown in the frame
-                cv.putText(rightFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700),
+                cv.putText(rightFrameMasked, "Distance: " + str(round(depth, 1)), (10, height - 20),
                            cv.FONT_HERSHEY_SIMPLEX,
-                           1.2,
-                           (0, 255, 0), 2)
-                cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700), cv.FONT_HERSHEY_SIMPLEX,
-                           1.2,
-                           (0, 255, 0), 2)
+                           1,
+                           (0, 255, 0), 1)
+                cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, height - 20), cv.FONT_HERSHEY_SIMPLEX,
+                           1,
+                           (0, 255, 0), 1)
 
             # the counter of iterations per second is put on to the frame as well
             cps.increment()
@@ -208,14 +212,15 @@ class ObjectTracking:
         found, center, frameMasked = self.od.detect_object(frame, frameMasked)
         return found, center, frameMasked
 
-    def find_interception(self, positions: np.array):
+    def find_interception(self, positions: np.array, height: int):
         """
         Find the interception point of the predicted path.
+        :param height:
         :param positions:
         :return:
         """
         # baseline
-        b = 720
+        b = height
         x, y, z = positions[:, 0], positions[:, 1], positions[:, 2]
         # function for Y relative to X
         y_x = np.polyfit(y, x, 2)

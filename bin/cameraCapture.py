@@ -10,15 +10,17 @@ class CameraCapture:
     with a dedicated thread.
     """
 
-    def __init__(self, src: int, exposure: int, gain: int):
+    def __init__(self, src: int, exposure: int, gain: int, img_size: tuple):
         """
         Creates cameraCapture object.
 
         :param src: ID of the camera
         """
+        self.img_size = img_size
         self.stream = cv2.VideoCapture(src)
         self.stream.set(cv2.CAP_PROP_EXPOSURE, exposure)
         self.stream.set(cv2.CAP_PROP_GAIN, gain)
+
         (self.grabbed, self.frame) = self.stream.read()
         self.stopped = False
 
@@ -55,4 +57,4 @@ class CameraCapture:
         Return Frame with according timestamp
         :return: timestamp as float and frame
         """
-        return self.timestamp, self.frame
+        return self.timestamp, cv2.resize(self.frame, self.img_size, interpolation=cv2.INTER_AREA)

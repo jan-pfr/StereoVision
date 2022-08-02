@@ -32,10 +32,11 @@ class CoordCalibration:
         self.right_id = self.config['CameraSettings'].getint('rightID', fallback=1)
         self.exposure = self.config['CameraSettings'].getint('exposure', fallback=0)
         self.gain = self.config['CameraSettings'].getint('gain', fallback=0)
+        self.img_size = self.config['CameraSettings'].gettuple('imgSize', fallback=(1280, 720))
 
         self.window_name = 'Coordinate Calibration'
         cv.namedWindow(self.window_name, cv.WINDOW_NORMAL)
-        cv.resizeWindow(self.window_name, 1280, 720)
+        cv.resizeWindow(self.window_name, 1280, 1080)
 
         # Logger configuration
         logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
@@ -53,8 +54,8 @@ class CoordCalibration:
         counter = 1
 
         # Cameras attributes in independent threads
-        capLeft = CameraCapture(self.left_id, self.exposure, self.gain).start()
-        capRight = CameraCapture(self.right_id, self.exposure, self.gain).start()
+        capLeft = CameraCapture(self.left_id, self.exposure, self.gain, self.img_size).start()
+        capRight = CameraCapture(self.right_id, self.exposure, self.gain, self.img_size).start()
         time.sleep(1)  # warm up cams
 
         while True:
@@ -71,12 +72,15 @@ class CoordCalibration:
             leftFound, leftCenter, leftFrameMasked = self.process_frame(leftFrame)
             rightFound, rightCenter, rightFrameMasked = self.process_frame(rightFrame)
 
+            # get frames dimenensions
+            height, width, depth_frame = leftFrameMasked.shape
+
             # If there is no object in left or right frame, this text is getting put onto the frame.
             if not leftFound or not rightFound:
-                cv.putText(rightFrameMasked, "No traceable object found", (10, 700), cv.FONT_HERSHEY_SIMPLEX, 1.2,
-                           (0, 0, 255), 2)
-                cv.putText(leftFrameMasked, "No traceable object found", (10, 700), cv.FONT_HERSHEY_SIMPLEX, 1.2,
-                           (0, 0, 255), 2)
+                cv.putText(rightFrameMasked, "No traceable object found", (10, height - 20), cv.FONT_HERSHEY_SIMPLEX, 1,
+                           (0, 0, 255), 1)
+                cv.putText(leftFrameMasked, "No traceable object found", (10, height - 20), cv.FONT_HERSHEY_SIMPLEX, 1,
+                           (0, 0, 255), 1)
 
             else:
                 # calculate the distance between the object and the baseline of the cameras [cm]
@@ -92,14 +96,14 @@ class CoordCalibration:
 
                 # since a depth has been calculated, it will be shown in the frame
                 try:
-                    cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, 700), cv.FONT_HERSHEY_SIMPLEX,
-                               1.2,
-                               (0, 255, 0), 2)
-                    cv.putText(leftFrameMasked, "Amount (max. 4): " + str(counter - 1), (10, 650),
-                               cv.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 1)
+                    cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, height - 20), cv.FONT_HERSHEY_SIMPLEX,
+                               1,
+                               (0, 255, 0), 1)
+                    cv.putText(leftFrameMasked, "Amount (max. 4): " + str(counter - 1), (10, height - 70),
+                               cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 1)
                     cv.putText(leftFrameMasked,
-                               "Press s for saving the coordinate: " + str(self.calibration_points[counter - 1]),
-                               (10, 600), cv.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 1)
+                               "Press s for: " + str(self.calibration_points[counter - 1]),
+                               (10, height - 120), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 1)
                 except:
                     pass
 
@@ -111,7 +115,7 @@ class CoordCalibration:
             if key == ord('q') or counter == 5:
                 if counter == 5:
                     self.calculate_trans_matrix()
-                logging.info("Saving parameters!")
+                    logging.info("Saving parameters!")
                 logging.info('The OpenCV Window will freeze. This is a normal behaviour.')
                 capLeft.stop()
                 capRight.stop()
