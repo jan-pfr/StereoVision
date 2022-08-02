@@ -27,7 +27,6 @@ class CoordCalibration:
 
         # Camera settings
         self.baseline = self.config['CameraSettings'].getfloat('baseline', fallback=18.1)
-        self.focal_length = self.config['CameraSettings'].getint('focalLength', fallback=3)
         self.fov = self.config['CameraSettings'].getint('fieldOfView', fallback=60)
         self.left_id = self.config['CameraSettings'].getint('leftID', fallback=0)
         self.right_id = self.config['CameraSettings'].getint('rightID', fallback=1)
@@ -84,7 +83,6 @@ class CoordCalibration:
                                            frame_right=rightFrameMasked,
                                            frame_left=leftFrameMasked,
                                            baseline=self.baseline,
-                                           f=self.focal_length,
                                            alpha=self.fov)
 
                 # the coordinates are put into a tuple
