@@ -58,9 +58,11 @@ class ObjectTracking:
 
         # Camera settings
         self.baseline = self.config['CameraSettings'].getfloat('baseline', fallback=18.1)
-        self.fov = self.config['CameraSettings'].getint('fieldOfView', fallback=60)
+        self.fov = self.config['CameraSettings'].getint('fieldOfView', fallback=51)
         self.left_id = self.config['CameraSettings'].getint('leftID', fallback=0)
         self.right_id = self.config['CameraSettings'].getint('rightID', fallback=1)
+        self.exposure = self.config['CameraSettings'].getint('exposure', fallback=0)
+        self.gain = self.config['CameraSettings'].getint('gain', fallback=0)
 
         # HSV ranges
         self.low_hsv_range = self.config['HSVRange'].gettuple('lowHSVRange')
@@ -93,8 +95,8 @@ class ObjectTracking:
         """
 
         # Cameras attributes in independent threads
-        capLeft = CameraCapture(self.left_id).start()
-        capRight = CameraCapture(self.right_id).start()
+        capLeft = CameraCapture(self.left_id, self.exposure, self.gain).start()
+        capRight = CameraCapture(self.right_id, self.exposure, self.gain).start()
         time.sleep(1)  # warm up cams
 
         # create openCV window

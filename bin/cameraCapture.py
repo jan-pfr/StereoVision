@@ -10,13 +10,15 @@ class CameraCapture:
     with a dedicated thread.
     """
 
-    def __init__(self, src: int):
+    def __init__(self, src: int, exposure: int, gain: int):
         """
         Creates cameraCapture object.
 
         :param src: ID of the camera
         """
         self.stream = cv2.VideoCapture(src)
+        self.stream.set(cv2.CAP_PROP_EXPOSURE, exposure)
+        self.stream.set(cv2.CAP_PROP_GAIN, gain)
         (self.grabbed, self.frame) = self.stream.read()
         self.stopped = False
 
