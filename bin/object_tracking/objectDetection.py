@@ -39,7 +39,6 @@ class ObjectDetection:
             self.center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
             # only proceed if the radius meets a minimum size
-            # toDo: Maybe make this a variable
             if radius > 17:
                 # draw the circle and center on the frame,
                 self.center_found = True

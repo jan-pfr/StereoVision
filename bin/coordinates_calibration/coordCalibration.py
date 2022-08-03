@@ -31,7 +31,7 @@ class CoordCalibration:
         self.left_id = self.config['CameraSettings'].getint('leftID', fallback=0)
         self.right_id = self.config['CameraSettings'].getint('rightID', fallback=1)
         self.exposure = self.config['CameraSettings'].getint('exposure', fallback=0)
-        self.gain = self.config['CameraSettings'].getint('gain', fallback=0)
+        self.saturation = self.config['CameraSettings'].getint('saturation', fallback=50)
         self.img_size = self.config['CameraSettings'].gettuple('imgSize', fallback=(1280, 720))
 
         self.window_name = 'Coordinate Calibration'
@@ -51,11 +51,15 @@ class CoordCalibration:
         self.trans_matrix = np.array([])
 
     def start(self):
+        """
+        Start the coordinate calibration.
+        :return:
+        """
         counter = 1
 
         # Cameras attributes in independent threads
-        capLeft = CameraCapture(self.left_id, self.exposure, self.gain, self.img_size).start()
-        capRight = CameraCapture(self.right_id, self.exposure, self.gain, self.img_size).start()
+        capLeft = CameraCapture(self.left_id, self.exposure, self.saturation, self.img_size).start()
+        capRight = CameraCapture(self.right_id, self.exposure, self.saturation, self.img_size).start()
         time.sleep(1)  # warm up cams
 
         while True:

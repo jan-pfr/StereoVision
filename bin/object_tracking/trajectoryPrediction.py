@@ -28,9 +28,9 @@ class TrajectoryPrediction:
         """
 
         ts = np.arange(path.shape[0])[:, np.newaxis]
-        xr = self.Xr.fit(ts, path[:, 0])  # Lineare Regression über die X Werte
         ts_transformed = self.Yr.fit_transform(ts)  # polynomische Features für die Zeit
 
+        xr = self.Xr.fit(ts, path[:, 0])  # fill RANSACRegressor with data and fit
         yr = self.YrR.fit(ts_transformed, path[:, 1])
         zr = self.Zr.fit(ts, path[:, 2])  # finde zu den zugehörigen x-Werten (ts) die y-Werte (path[:, 2])
 

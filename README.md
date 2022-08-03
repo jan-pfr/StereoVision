@@ -31,7 +31,20 @@ The third way is to use the application to predict the trajectory of the ball.
 
 Disclaimer: The OpenCV window will freeze everytime the application returns to the main menu. This is a normal behavior.
 
-
+### Configuration
+In the config file `config.ini` you can find the following parameters:
+- minsamples : The minimum number of samples that must be taken to perform a trajectory prediction. Minimum is 2.
+- mintimedifference : The minimum time difference between two frames.
+- baseline : The distance between the two cameras in cm.
+- fieldofview : The field of view of the camera in degrees.
+- leftid : The id of the left camera.
+- rightid : The id of the right camera.
+- exposure : The exposure of the camera in ms. That depends on the camera and operating system.
+- saturation : The saturation of the camera. That depends on the camera.
+- lowhsvrange : The lower bound of the HSV-Range of the ball.
+- highhsvrange : The higher bound of the HSV-Range of the ball.
+- calibpoints : The coordinates of points that must be taken to calculate the affine transformation matrix.
+- matrix :  The estimated affine transformation matrix.
 
 ## License
 This project is licensed under the MIT License.

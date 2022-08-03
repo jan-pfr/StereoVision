@@ -62,7 +62,7 @@ class ObjectTracking:
         self.left_id = self.config['CameraSettings'].getint('leftID', fallback=0)
         self.right_id = self.config['CameraSettings'].getint('rightID', fallback=1)
         self.exposure = self.config['CameraSettings'].getint('exposure', fallback=0)
-        self.gain = self.config['CameraSettings'].getint('gain', fallback=0)
+        self.saturation = self.config['CameraSettings'].getint('saturation', fallback=50)
         self.img_size = self.config['CameraSettings'].gettuple('imgSize', fallback=(1280, 720))
 
         # HSV ranges
@@ -96,8 +96,8 @@ class ObjectTracking:
         """
 
         # Cameras attributes in independent threads
-        capLeft = CameraCapture(self.left_id, self.exposure, self.gain, self.img_size).start()
-        capRight = CameraCapture(self.right_id, self.exposure, self.gain, self.img_size).start()
+        capLeft = CameraCapture(self.left_id, self.exposure, self.saturation, self.img_size).start()
+        capRight = CameraCapture(self.right_id, self.exposure, self.saturation, self.img_size).start()
         time.sleep(1)  # warm up cams
 
         # create openCV window
@@ -128,9 +128,11 @@ class ObjectTracking:
             if self.left_frame_old.shape[0] == 0 or self.right_frame_old.shape[0] == 0:
                 self.left_frame_old = leftFrame
                 self.right_frame_old = rightFrame
-            elif np.array_equal(leftFrame, self.left_frame_old) or np.array_equal(rightFrame, self.right_frame_old):
+            elif not (np.bitwise_xor(leftFrame, self.left_frame_old).any()) or not (
+                    np.bitwise_xor(rightFrame, self.right_frame_old).any()):
                 logging.info('duplicate in one of the cams')
                 continue
+
             # the pictures getting processed
             leftFound, leftCenter, leftFrameMasked = self.process_frame(leftFrame)
             rightFound, rightCenter, rightFrameMasked = self.process_frame(rightFrame)
@@ -215,8 +217,8 @@ class ObjectTracking:
     def find_interception(self, positions: np.array, height: int):
         """
         Find the interception point of the predicted path.
-        :param height:
-        :param positions:
+        :param height: height of the frame
+        :param positions: array of predicted coordinates
         :return:
         """
         # baseline
@@ -238,7 +240,7 @@ class ObjectTracking:
     def move_to_robot(self, pos: np.array):
         """
         Move the robot to the given position.
-        :param pos:
+        :param pos: array of coordinates
         :return:
         """
         print(pos[0], pos[1], pos[2])

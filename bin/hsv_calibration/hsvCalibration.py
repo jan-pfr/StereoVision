@@ -22,10 +22,10 @@ class HSVRangeCalibration:
         self.initial_hsv_low = self.config['HSVRange'].gettuple('lowHSVRange')
         self.initial_hsv_high = self.config['HSVRange'].gettuple('highHSVRange')
         self.exposure = self.config['CameraSettings'].getint('exposure', fallback=0)
-        self.gain = self.config['CameraSettings'].getint('gain', fallback=0)
+        self.saturation = self.config['CameraSettings'].getint('saturation', fallback=50)
         self.img_size = self.config['CameraSettings'].gettuple('imgSize', fallback=(1280, 720))
 
-        self.cam = CameraCapture(self.left_id, self.exposure, self.gain, self.img_size).start()
+        self.cam = CameraCapture(self.left_id, self.exposure, self.saturation, self.img_size).start()
 
         self.window_name = 'HSV Range Calibration'
         cv.namedWindow(self.window_name, cv.WINDOW_NORMAL)

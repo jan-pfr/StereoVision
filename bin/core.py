@@ -10,13 +10,11 @@ from bin.hsv_calibration.hsvCalibration import HSVRangeCalibration
 from bin.object_tracking.objectTracking import ObjectTracking
 
 
-
-
 # Source: https://stackoverflow.com/questions/2835559/parsing-values-from-a-config-file-in-python
 def parse_int_tuple(s: str):
     """
     Parse a string into a tuple of ints.
-    :param s:
+    :param s: String to parse.
     :return:
     """
     return tuple(int(i.strip()) for i in s[1:-1].split(','))
@@ -27,7 +25,7 @@ def str2array(s):
     Remove space after [
     Replace commas and spaces
 
-    :param s:
+    :param s: String to parse.
     :return:
     """
     # Remove space after [
@@ -35,6 +33,7 @@ def str2array(s):
     # Replace commas and spaces
     s = re.sub('[,\s]+', ', ', s)
     return np.array(ast.literal_eval(s))
+
 
 class Application:
 
