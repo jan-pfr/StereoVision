@@ -29,6 +29,8 @@ class Triangulation:
         height_left, width_left, depth_left = frame_left.shape
 
         if width_right == width_left:
+            # focal length in pixel based on the field of view
+            # Source: https://answers.opencv.org/question/17076/conversion-focal-distance-from-mm-to-pixels/
             f_pixel = (width_right * 0.5) / np.tan(alpha * 0.5 * np.pi / 180)
 
         else:
