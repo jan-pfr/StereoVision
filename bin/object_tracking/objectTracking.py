@@ -92,7 +92,7 @@ class ObjectTracking:
         cv.resizeWindow(window_name, 1280, 1080)
 
         # optional counter for iterations per second
-        cps = CountsPerSec().start()
+        # cps = CountsPerSec().start()
 
         while True:
 
@@ -171,9 +171,9 @@ class ObjectTracking:
                            (0, 255, 0), 1)
 
             # the counter of iterations per second is put on to the frame as well
-            cps.increment()
-            cv.putText(leftFrame, "{:.0f} iterations/sec".format(cps.countsPerSec()),
-                       (10, height - 100), cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
+            # cps.increment()
+            # cv.putText(leftFrame, "{:.0f} iterations/sec".format(cps.countsPerSec()),
+            #            (10, height - 100), cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
 
             # the left and right frame are stacked together for better view.
             frames = np.hstack((leftFrame, rightFrame))
