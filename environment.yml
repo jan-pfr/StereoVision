@@ -86,4 +86,3 @@ dependencies:
   - xz=5.2.5=hca72f7f_1
   - zlib=1.2.12=h4dc903c_2
   - zstd=1.5.2=hcb37349_0
-prefix: /Users/jpf/opt/anaconda3/envs/stereoVision

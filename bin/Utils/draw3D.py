@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-from bin.object_tracking.trajectoryPrediction import TrajectoryPrediction
+from bin.oT.trajectoryPrediction import TrajectoryPrediction
 
 tp = TrajectoryPrediction(2)
 

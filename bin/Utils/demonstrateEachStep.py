@@ -1,6 +1,6 @@
 import cv2 as cv
 
-import bin.object_tracking.objectDetection as od
+import bin.oT.objectDetection as od
 
 lowerHSVRange = (18, 172, 55)
 higherHSVRange = (33, 255, 183)

@@ -5,9 +5,9 @@ import re
 import numpy as np
 
 from AppState import AppState
-from bin.coordinates_calibration.coordCalibration import CoordCalibration
-from bin.hsv_calibration.hsvCalibration import HSVRangeCalibration
-from bin.object_tracking.objectTracking import ObjectTracking
+from coordCal.coordCalibration import CoordCalibration
+from hsvCal.hsvCalibration import HSVRangeCalibration
+from oT.objectTracking import ObjectTracking
 
 
 # Source: https://stackoverflow.com/questions/2835559/parsing-values-from-a-config-file-in-python

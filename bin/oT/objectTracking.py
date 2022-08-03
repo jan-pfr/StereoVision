@@ -5,11 +5,10 @@ import cv2 as cv
 import numpy as np
 
 from bin.cameraCapture import CameraCapture
-from bin.object_tracking.counter import CountsPerSec
-from bin.object_tracking.filter import Filter
-from bin.object_tracking.objectDetection import ObjectDetection
-from bin.object_tracking.trajectoryPrediction import TrajectoryPrediction
-from bin.object_tracking.triangulation import Triangulation
+from bin.oT.filter import Filter
+from bin.oT.objectDetection import ObjectDetection
+from bin.oT.trajectoryPrediction import TrajectoryPrediction
+from bin.oT.triangulation import Triangulation
 
 
 def draw_points_to_frame(points: np.array, frame) -> np.array:
@@ -106,7 +105,7 @@ class ObjectTracking:
 
             # Check if the images are too far apart in time.
             diff = abs(leftTimestamp - rightTimestamp)
-            if 0.029 > diff > self.min_time_diff:
+            if diff > self.min_time_diff:
                 logging.info(f'Diff too big: {round(diff, 4)} seconds')
                 continue
 
