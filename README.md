@@ -19,7 +19,7 @@ To use the application, the entire project must be downloaded and the necessary 
 For this open a terminal in the project's directory and run the command `conda env create -f environment.yml`.
 
 ## Start
-Go inside the project's directory and run the command `python ./bin/core.py`
+Go into the project directory and run the command `python ./bin/core.py`
 
 ## Usage
 The application can be used in three ways.
