@@ -12,20 +12,6 @@ from bin.object_tracking.trajectoryPrediction import TrajectoryPrediction
 from bin.object_tracking.triangulation import Triangulation
 
 
-def put_iterations_per_sec(frame, iterations_per_sec):
-    """
-    Put the Iterations per Second Number on to a frame.
-
-    :param frame: as np.array
-    :param iterations_per_sec: number
-    :return: frame with number
-    """
-
-    cv.putText(frame, "{:.0f} iterations/sec".format(iterations_per_sec),
-               (10, 650), cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
-    return frame
-
-
 def draw_points_to_frame(points: np.array, frame) -> np.array:
     """
     Get points and draws them onto the frame.
@@ -179,13 +165,15 @@ class ObjectTracking:
                            cv.FONT_HERSHEY_SIMPLEX,
                            1,
                            (0, 255, 0), 1)
-                cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, height - 20), cv.FONT_HERSHEY_SIMPLEX,
+                cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, height - 20),
+                           cv.FONT_HERSHEY_SIMPLEX,
                            1,
                            (0, 255, 0), 1)
 
             # the counter of iterations per second is put on to the frame as well
             cps.increment()
-            # leftFrame = put_iterations_per_sec(leftFrame, cps.countsPerSec())
+            cv.putText(leftFrame, "{:.0f} iterations/sec".format(cps.countsPerSec()),
+                       (10, height - 100), cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255))
 
             # the left and right frame are stacked together for better view.
             frames = np.hstack((leftFrame, rightFrame))
@@ -194,7 +182,7 @@ class ObjectTracking:
             # Hit "q" to close the window
             if cv.waitKey(1) & 0xFF == ord('q'):
                 logging.info("Saving parameters!")
-                logging.info('The OpenCV Window will freeze. This is a normal behaviour.')
+                logging.info('The OpenCV Window could freeze. This is a normal behaviour.')
                 capLeft.stop()
                 capRight.stop()
                 cv.destroyAllWindows()

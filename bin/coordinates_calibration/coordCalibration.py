@@ -120,7 +120,7 @@ class CoordCalibration:
                 if counter == 5:
                     self.calculate_trans_matrix()
                     logging.info("Saving parameters!")
-                logging.info('The OpenCV Window will freeze. This is a normal behaviour.')
+                logging.info('The OpenCV Window could freeze. This is a normal behaviour.')
                 capLeft.stop()
                 capRight.stop()
                 cv.destroyAllWindows()

@@ -96,7 +96,7 @@ class HSVRangeCalibration:
                 self.update_config()
                 self.cam.stop()
                 cv.destroyAllWindows()
-                logging.info('The OpenCV Window will freeze. This is a normal behaviour.')
+                logging.info('The OpenCV Window could freeze. This is a normal behaviour.')
                 break
 
     def __del__(self):
