@@ -39,10 +39,10 @@ class Triangulation:
         x_right = right_point[0]
         x_left = left_point[0]
 
-        # CALCULATE THE DISPARITY:
-        disparity = x_left - x_right  # Displacement between left and right frames [pixels]
+        # calculate disparity
+        disparity = x_left - x_right  # in pixel
 
-        # CALCULATE DEPTH z:
-        depth = (baseline * f_pixel) / disparity  # Depth in [cm]
+        # calculate depth
+        depth = (baseline * f_pixel) / disparity  # in cm
 
         return abs(depth)

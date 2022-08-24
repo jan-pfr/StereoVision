@@ -13,10 +13,10 @@ class TrajectoryPrediction:
         Creates a TrajectoryPrediction object.
 
         """
-        self.Xr = RANSACRegressor(min_samples=min_samples)
-        self.Yr = PolynomialFeatures()
-        self.YrR = RANSACRegressor(min_samples=min_samples)
-        self.Zr = RANSACRegressor(min_samples=min_samples)
+        self.X_ransac = RANSACRegressor(min_samples=min_samples)
+        self.t_poly = PolynomialFeatures()
+        self.Y_ransac = RANSACRegressor(min_samples=min_samples)
+        self.Z_ransac = RANSACRegressor(min_samples=min_samples)
 
     def predict_path(self, path: np.array, next_points: int) -> np.array:
         """
@@ -26,19 +26,22 @@ class TrajectoryPrediction:
         :param next_points: Number of next points to predict
         :return: Numpy Array of predicted next points
         """
+        # extract time and create polynomial features from it
+        time = np.arange(path.shape[0])[:, np.newaxis]
+        time_transformed = self.t_poly.fit_transform(time)
 
-        ts = np.arange(path.shape[0])[:, np.newaxis]
-        ts_transformed = self.Yr.fit_transform(ts)  # polynomische Features für die Zeit
+        # create RANSAC regression model for X, Y and Z
+        xr = self.X_ransac.fit(time, path[:, 0])
+        yr = self.Y_ransac.fit(time_transformed, path[:, 1])
+        zr = self.Z_ransac.fit(time, path[:, 2])
 
-        xr = self.Xr.fit(ts, path[:, 0])  # fill RANSACRegressor with data and fit
-        yr = self.YrR.fit(ts_transformed, path[:, 1])
-        zr = self.Zr.fit(ts, path[:, 2])  # finde zu den zugehörigen x-Werten (ts) die y-Werte (path[:, 2])
+        # extend the time by the given number of points
+        time_extended = np.arange(path.shape[0] + next_points)[:, np.newaxis]
+        time_extended_transformed = self.t_poly.fit_transform(np.arange(time_extended.shape[0])[:, np.newaxis])
 
-        ts = np.arange(path.shape[0] + next_points)[:, np.newaxis]
-        Y_transformed = self.Yr.fit_transform(np.arange(ts.shape[0])[:, np.newaxis])
-
-        pred_path = np.zeros(ts.shape[0] * 3).reshape(-1, 3)
-        pred_path[:, 0] = xr.predict(np.arange(ts.shape[0])[:, np.newaxis])
-        pred_path[:, 1] = yr.predict(Y_transformed)
-        pred_path[:, 2] = zr.predict(np.arange(ts.shape[0])[:, np.newaxis])
+        # predict the next points
+        pred_path = np.zeros(time_extended.shape[0] * 3).reshape(-1, 3)
+        pred_path[:, 0] = xr.predict(np.arange(time_extended.shape[0])[:, np.newaxis])
+        pred_path[:, 1] = yr.predict(time_extended_transformed)
+        pred_path[:, 2] = zr.predict(np.arange(time_extended.shape[0])[:, np.newaxis])
         return pred_path

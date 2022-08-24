@@ -19,7 +19,7 @@ class CoordCalibration:
         self.hsv_low = self.config['HSVRange'].gettuple('lowHSVRange')
         self.hsv_high = self.config['HSVRange'].gettuple('highHSVRange')
 
-        #
+        # Calibration points
         self.calibration_points = self.config['CoordCalibration'].getarray('calibpoints')
 
         self.min_samples = self.config['TrajectoryPredictionSettings'].getint('minSamples', fallback=2)
@@ -100,7 +100,8 @@ class CoordCalibration:
 
                 # since a depth has been calculated, it will be shown in the frame
                 try:
-                    cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, height - 20), cv.FONT_HERSHEY_SIMPLEX,
+                    cv.putText(leftFrameMasked, "Distance: " + str(round(depth, 1)), (10, height - 20),
+                               cv.FONT_HERSHEY_SIMPLEX,
                                1,
                                (0, 255, 0), 1)
                     cv.putText(leftFrameMasked, "Amount (max. 4): " + str(counter - 1), (10, height - 70),
@@ -111,7 +112,7 @@ class CoordCalibration:
                 except:
                     pass
 
-                    # the left and right frame are stacked together for better view.
+            # the left and right frame are stacked together for better view.
             frames = np.hstack((leftFrame, rightFrame))
             cv.imshow(self.window_name, frames)
 

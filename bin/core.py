@@ -56,7 +56,7 @@ class Application:
 
         :return:
         """
-
+        self.appState = AppState.MAINLOOP
         self.update_config()
 
         while True:
@@ -73,7 +73,7 @@ class Application:
                 self.appState = AppState.CLOSESTATE
                 break
             elif int(u_input) == 1:
-                self.appState = AppState.NORMALSTATE
+                self.appState = AppState.OBJECTTRACKING
                 break
             elif int(u_input) == 2:
                 self.appState = AppState.COORDCALIBRATION
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     while True:
         app.main()
 
-        if app.appState == AppState.NORMALSTATE:
+        if app.appState == AppState.OBJECTTRACKING:
             object_tracking = ObjectTracking(app.config)
             object_tracking.start()
             del object_tracking

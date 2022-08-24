@@ -29,7 +29,7 @@ class Filter:
         blurred_frame = cv.GaussianBlur(frame, (11, 11), 0)
         hsv = cv.cvtColor(blurred_frame, cv.COLOR_BGR2HSV)
 
-        # create mask with hsv range and remove small blobs
+        # create mask with hsv range and remove small artefacts
         masked_frame = cv.inRange(hsv, self.low_hsv_range, self.high_hsv_range)
         masked_frame = cv.erode(masked_frame, None, iterations=2)
         masked_frame = cv.dilate(masked_frame, None, iterations=2)
